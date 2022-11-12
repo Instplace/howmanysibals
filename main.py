@@ -11,18 +11,9 @@ class Loid(commands.Bot):
     class Config:
         def __init__(self, path: str) -> None:
             load_dotenv(dotenv_path=path, override=True)
-        
-        @staticmethod
-        def token(self) -> Optional[str]:
-            return os.getenv("LOID_TOKEN")
-        
-        @staticmethod
-        def webhook(self) -> Optional[str]:
-            return os.getenv("LOID_WEBHOOK")
-
-        @staticmethod
-        def mysql(self) -> dict:
-            return {
+            self.token = os.getenv("LOID_TOKEN")
+            self.webhook = os.getenv("LOID_WEBHOOK")
+            self.mysql = {
                 "host": os.getenv("LOID_MYSQL_HOST") or "localhost",
                 "port": int(os.getenv("LOID_MYSQL_PORT")) or 3306,
                 "user": os.getenv("LOID_MYSQL_USER") or "root",
@@ -40,11 +31,7 @@ class Loid(commands.Bot):
             intents=disnake.Intents.all(),
             help_command=None,
         )
-        self.config_path = "./.env"
-    
-    @staticmethod
-    def config(self) -> Loid.Config:
-        return self.Config(self.config_path)
+        self.config = self.Config("./")
     
     def preload(self, path: Optional[str] = "./exts") -> dict:
         files = os.listdir(path)
@@ -67,7 +54,7 @@ class Loid(commands.Bot):
         return result
 
     def run(self) -> None:
-        result = self.load_extensions()
+        result = self.preload()
         print(f"There is/are {result['success_count']} (Total is {result['total']}) extension(s) loaded.")
         super().run(self.config.token)
 
