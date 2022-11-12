@@ -134,7 +134,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
             disabled=False,
             row=0
         )
-        async def _whatToChange(self, select: disnake.Select, inter: disnake.MessageInteraction) -> None:
+        async def _whatToChange(self, select: disnake.ui.StringSelect, inter: disnake.MessageInteraction) -> None:
             o = await aiomysql.connect(**inter.bot.config.mysql)
             c = await o.cursor(aiomysql.DictCursor)
             await c.execute(f"SELECT * FROM `settings` WHERE `guild` = '{inter.guild.id}'")
