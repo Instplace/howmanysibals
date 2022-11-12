@@ -8,6 +8,7 @@ class Owner(commands.Cog, name="쉬운 관리"):
         self.bot = bot
 
     @commands.command(name="reload")
+    @commands.is_owner()
     async def _reload(self, ctx: commands.Context) -> None:
         path = "./exts"
         files = os.listdir(path)
