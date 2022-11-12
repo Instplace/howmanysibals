@@ -347,6 +347,7 @@ Found : {result[1]}
         
         async with aiohttp.ClientSession() as cs:
             async with cs.post("https://hastebin.com/documents", data=content) as r:
+                print(await r.text())
                 res = await r.json()
                 await ctx.reply(f"📜 > 현재 캐싱된 스트라이크 목록을 보려면 아래 링크를 확인하세요.\nhttps://hastebin.com/{res['key']}")
 
