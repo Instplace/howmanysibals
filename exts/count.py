@@ -129,7 +129,7 @@ Found : {result[1]}
                 user = ctx.guild.get_member(int(d))
                 if not user:
                     continue
-                content += f"{user.display_name} - **{datas[d]}회**\n"
+                content += f"{user.display_name} - {datas[d]}회\n"
             content += f"```\n🌟 > {ctx.guild.name} 서버 내 {word} 스트라이크의 감지 횟수는 총 **{len(rows)}회**입니다."
             await ctx.reply(content)
         o.close()
