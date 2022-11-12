@@ -76,7 +76,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
         if msg.content.startswith("?add") or msg.content.startswith("?remove") or msg.content.startswith("?total"):
             return
 
-        result = await self.find(msg.content)
+        result = await self.find(msg.clean_content)
         if not result:
             return
         
