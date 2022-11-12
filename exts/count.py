@@ -51,7 +51,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
             @disnake.ui.button(
                 label="취소하기",
                 style=disnake.ButtonStyle.red,
-                emoji="",
+                emoji="🆖",
                 disabled=False,
                 row=1
             )
@@ -102,7 +102,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
             @disnake.ui.button(
                 label="취소하기",
                 style=disnake.ButtonStyle.red,
-                emoji="",
+                emoji="🆖",
                 disabled=False,
                 row=1
             )
@@ -140,13 +140,13 @@ class Counter(commands.Cog, name="욕설 감지기"):
             await c.execute(f"SELECT * FROM `settings` WHERE `guild` = '{inter.guild.id}'")
             rows = await c.fetchall()
             data = rows[0]
-            await inter.response.edit_message(view=self.views[select.values](self.ctx, self.msg, data))
+            await inter.response.edit_message(view=self.views[select.values[0]](self.ctx, self.msg, data))
             o.close()
         
         @disnake.ui.button(
             label="취소하기",
             style=disnake.ButtonStyle.red,
-            emoji="",
+            emoji="🆖",
             disabled=False,
             row=1
         )
