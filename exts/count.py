@@ -16,7 +16,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
                     super().__init__(
                         placeholder=f"새로운 감지 모드를 지정해주세요. 현재 '{texts[int(data['mode'])]}'",
                         min_values=1,
-                        max_valaues=1,
+                        max_values=1,
                         options=[
                             disnake.SelectOption(label="꺼짐", value="0", description="로이드가 더 이상 스트라이크를 감지하지 않습니다.", emoji="🚫"),
                             disnake.SelectOption(label="간단", value="1", description="스트라이크를 정확히 포함하는 경우에만 감지합니다.", emoji="❓"),
@@ -67,7 +67,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
                     super().__init__(
                         placeholder=f"새로운 응답 유형을 지정해주세요. 현재 '{texts[int(data['respond'])]}'",
                         min_values=1,
-                        max_valaues=1,
+                        max_values=1,
                         options=[
                             disnake.SelectOption(label="매너 모드", value="0", description="로이드가 스트라이크를 감지하더라도 알리지 않습니다. 카운트는 추가됩니다.", emoji="🔇"),
                             disnake.SelectOption(label="약하게", value="1", description="로이드가 스트라이크를 감지하면 해당 메시지에 반응을 추가합니다.", emoji="🔉"),
