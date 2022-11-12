@@ -119,10 +119,10 @@ Found : {result[1]}
         if mode is None:
             await ctx.reply(f"🌟 > 현재 감지 모드는 `{list(modes)[self.mode]}`입니다.")
         elif mode not in modes:
-            await ctx.reply(f"🌟 > {mode}(은)는 잘못된 모드 설정입니다.\n`꺼짐`, `간단`, `기본`, `엄격` 중에서 하나를 입력하세요.")
+            await ctx.reply(f"🌟 > `{mode}`(은)는 잘못된 모드 설정입니다.\n`꺼짐`, `간단`, `기본`, `엄격` 중에서 하나를 입력하세요.")
         else:   
             self.mode = modes[mode]
-            await ctx.reply(f"🌟 > 감지 모드가 {mode}으로 설정되었습니다.")
+            await ctx.reply(f"🌟 > 감지 모드가 `{mode}`으로 설정되었습니다.")
 
     @commands.command(name="total")
     @commands.is_owner()
@@ -172,25 +172,35 @@ Found : {result[1]}
             await ask.delete()
             await ctx.reply(content=f":wastebasket: > **{ctx.guild.name}** 서버의 전체 스트라이크 감지를 초기화했습니다.")
 
-    @commands.command(name="add")
+    @commands.group(name="word")
+    @commands.is_owner()
+    async def words(self, ctx: commands.Context) -> None:
+        if ctx.invoked_subcommand is None:
+            raise commands.BadArgument
+
+    @words.command(name="reload")
+    @commands.is_owner()
+    async def _reloadWord(self, ctx: commands.Context) -> None:
+        await self.prepare()
+        await ctx.reply(f"🔄 > 단어 목록을 다시 불러왔습니다.")
+
+    @words.command(name="add")
     @commands.is_owner()
     async def _addWord(self, ctx: commands.Context, word: str, detect: str) -> None:
         o = await aiomysql.connect(**self.bot.config.mysql)
         c = await o.cursor(aiomysql.DictCursor)
         await c.execute(f"INSERT INTO `detects` VALUES ('{detect}', '{word}')")
         o.close()
-#        await self.prepare()
-        await ctx.reply("<:popcorn_k:949665093044535336> > 단어 추가에 성공했습니다! 변경 사항을 적용하려면 `?reload` 명령을 수행하세요.")
+        await ctx.reply("<:popcorn_k:949665093044535336> > 단어 추가에 성공했습니다! 변경 사항을 적용하려면 `?word reload` 명령을 수행하세요.")
     
-    @commands.command(name="remove")
+    @words.command(name="remove")
     @commands.is_owner()
     async def _removeWord(self, ctx: commands.Context, detect: str) -> None:
         o = await aiomysql.connect(**self.bot.config.mysql)
         c = await o.cursor(aiomysql.DictCursor)
         await c.execute(f"DELETE FROM `detects` WHERE `detection` = '{detect}'")
         o.close()
-#        await self.prepare()
-        await ctx.reply("<:popcorn_k:949665093044535336> > 단어를 삭제했습니다! 변경 사항을 적용하려면 `?reload` 명령을 수행하세요.")
+        await ctx.reply("<:popcorn_k:949665093044535336> > 단어를 삭제했습니다! 변경 사항을 적용하려면 `?word reload` 명령을 수행하세요.")
 
 
 def setup(bot: commands.Bot) -> None:
