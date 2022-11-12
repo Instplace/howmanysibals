@@ -10,22 +10,26 @@ from disnake.ext import commands
 class Counter(commands.Cog, name="욕설 감지기"):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.strict = False
+        self.mode = 2
     
     async def find(self, content: str) -> Optional[List[str]]:
         if content.startswith("https://") or content.startswith("http://"):
             return
+        
+        if self.mode < 1:
+            return
 
         content = content.lower()
-        exp = re.compile(r"[^a-zA-Zㄱ-ㅎㅏ-ㅣ가-힣]")
-        removes = exp.findall(content)
-        async for rem in self.async_list(removes):
-            content = content.replace(rem, "")
+        if self.mode >= 2:
+            exp = re.compile(r"[^a-zA-Zㄱ-ㅎㅏ-ㅣ가-힣]")
+            removes = exp.findall(content)
+            async for rem in self.async_list(removes):
+                content = content.replace(rem, "")
         async for word in self.async_list(self.words):
             async for detection in self.async_list(self.words[word]):
                 if detection in content:
                     return [word, detection]
-                if self.strict is True:
+                if self.mode >= 3:
                     w = re.compile(r"[a-zA-Zㄱ-ㅎㅏ-ㅣ가-힣]".join(detection))
                     result = w.findall(content)
                     if len(result) != 0:
@@ -103,11 +107,22 @@ Found : {result[1]}
         await c.execute(f"DELETE FROM `counts` WHERE `user` = '{member.id}' AND `guild` = '{member.guild.id}'")
         o.close()
 
-    @commands.command(name="strict")
+    @commands.command(name="mode")
     @commands.is_owner()
-    async def _toggleStrict(self, ctx: commands.Context, toggle: bool) -> None:
-        self.strict = toggle
-        await ctx.reply(f"🌟 > 엄격 모드가 {toggle}로 설정되었습니다.")
+    async def _changeMode(self, ctx: commands.Context, mode: Optional[str] = None) -> None:
+        modes = {
+            "꺼짐": 0,
+            "간단": 1,
+            "기본": 2,
+            "엄격": 3
+        }
+        if mode is None:
+            await ctx.reply(f"🌟 > 현재 감지 모드는 `{list(modes)[self.mode]}`입니다.")
+        elif mode not in modes:
+            await ctx.reply(f"🌟 > {mode}(은)는 잘못된 모드 설정입니다.\n`꺼짐`, `간단`, `기본`, `엄격` 중에서 하나를 입력하세요.")
+        else:   
+            self.mode = modes[mode]
+            await ctx.reply(f"🌟 > 감지 모드가 {mode}으로 설정되었습니다.")
 
     @commands.command(name="total")
     @commands.is_owner()
