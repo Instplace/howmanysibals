@@ -1,4 +1,5 @@
 import asyncio
+import io
 import re
 from typing import Any, List, Optional
 
@@ -344,12 +345,9 @@ Found : {result[1]}
             content += f"\n{word} 단어에 추가된 스트라이크 목록 ({len(self.words[word])}개) :\n"
             async for detection in self.async_list(self.words[word]):
                 content += f"{detection}\n"
-        
-        async with aiohttp.ClientSession() as cs:
-            async with cs.post("https://hastebin.com/documents", data=content) as r:
-                print(await r.text())
-                res = await r.json()
-                await ctx.reply(f"📜 > 현재 캐싱된 스트라이크 목록을 보려면 아래 링크를 확인하세요.\nhttps://hastebin.com/{res['key']}")
+
+        data = io.StringIO(content)
+        await ctx.reply(f"📜 > 현재 캐싱된 스트라이크 목록을 보려면 아래 파일을 확인하세요.", file=disnake.File(fp=data, filename="strikes.txt"))
 
     @words.command(name="reload")
     @commands.is_owner()
