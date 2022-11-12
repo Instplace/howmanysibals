@@ -128,7 +128,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
             min_values=1,
             max_values=1,
             options=[
-                disnake.SelectOption(label="감지 모드 변경하기", value="strict", description="로이드의 스트라이크 감지 민감도를 설정합니다.", emoji="🚨").
+                disnake.SelectOption(label="감지 모드 변경하기", value="strict", description="로이드의 스트라이크 감지 민감도를 설정합니다.", emoji="🚨"),
                 disnake.SelectOption(label="응답 유형 변경하기", value="respond", description="로이드가 스트라이크를 감지했을 때의 응답을 조정합니다.", emoji="💬"),
             ],
             disabled=False,
