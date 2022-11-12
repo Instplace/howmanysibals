@@ -106,7 +106,7 @@ Found : {result[1]}
     @commands.is_owner()
     async def _toggleStrict(self, ctx: commands.Context, toggle: bool) -> None:
         self.strict = toggle
-        await ctx.reply(f"🌟 > 스트릭트 모드가 {toggle}로 변경되었습니다.")
+        await ctx.reply(f"🌟 > 엄격 모드가 {toggle}로 설정되었습니다.")
 
     @commands.command(name="total")
     @commands.is_owner()
@@ -116,7 +116,7 @@ Found : {result[1]}
         await c.execute(f"SELECT * FROM `counts` WHERE `word` = '{word}' AND `guild` = '{ctx.guild.id}'")
         rows = await c.fetchall()
         if not rows:
-            await ctx.reply(f"> 아직 {word} 스트라이크를 발견하지 못했습니다.")
+            await ctx.reply(f"<a:clap:949665959084458036> > 아직 {word} 스트라이크를 발견하지 못했습니다.")
         else:
             datas = {}
             async for row in self.async_list(rows):
@@ -124,15 +124,37 @@ Found : {result[1]}
                     datas[row["user"]] = 1
                 else:
                     datas[row["user"]] += 1
-            content = ""
+            content = "```\n"
             async for d in self.async_list(datas):
                 user = ctx.guild.get_member(int(d))
                 if not user:
                     continue
-                content += ""
-            content += ""
+                content += f"{user.display_name} - **{data[d]}회**\n"
+            content += f"```\n🌟 > {ctx.guild.name} 서버 내 {word} 스트라이크의 감지 횟수는 총 **{len(rows)}회**입니다."
             await ctx.reply(content)
         o.close()
+
+    @commands.command(name="reset")
+    @commands.is_owner()
+    async def _resetCounts(self, ctx: commands.Context) -> None:
+        ask = await ctx.reply(f"""
+🔄 > 정말로 **{ctx.guild.name}** 서버의 전체 스트라이크 감지를 초기화하시겠습니까?
+**이 작업은 영구적이며, 실행 이후에는 되돌릴 수 없습니다!**
+되돌릴 수 없음을 이해했으며, 초기화 작업을 실행하시겠다면 `{self.bot.user.name}`를 입력하세요.
+        """)
+        def check(msg: disnake.Message) -> bool:
+            return msg.author == ctx.author and msg.channel == ctx.channel and msg.content in [msg.guild.me.name, "취소"]
+        try:
+            msg = await self.bot.wait_for("message", timeout=30, check=check)
+        except:
+            await ask.delete()
+        else:
+            o = await aiomysql.connect(**self.bot.config.mysql)
+            c = await o.cursor(aiomysql.DictCursor)
+            await c.execute(f"DELETE FROM `counts` WHERE `guild` = '{ctx.guild.id}'")
+            o.close()
+            await ask.delete()
+            await ctx.reply(content=f":wastebasket: > **{ctx.guild.name}** 서버의 전체 스트라이크 감지를 초기화했습니다.")
 
     @commands.command(name="add")
     @commands.is_owner()
@@ -142,7 +164,7 @@ Found : {result[1]}
         await c.execute(f"INSERT INTO `detects` VALUES ('{detect}', '{word}')")
         o.close()
 #        await self.prepare()
-        await ctx.reply("단어 추가에 성공했습니다! 변경 사항을 적용하려면 **?reload** 명령을 수행하세요.")
+        await ctx.reply("<:popcorn_k:949665093044535336> > 단어 추가에 성공했습니다! 변경 사항을 적용하려면 `?reload` 명령을 수행하세요.")
     
     @commands.command(name="remove")
     @commands.is_owner()
@@ -152,7 +174,7 @@ Found : {result[1]}
         await c.execute(f"DELETE FROM `detects` WHERE `detection` = '{detect}'")
         o.close()
 #        await self.prepare()
-        await ctx.reply("단어를 삭제했습니다! 변경 사항을 적용하려면 **?reload** 명령을 수행하세요.")
+        await ctx.reply("<:popcorn_k:949665093044535336> > 단어를 삭제했습니다! 변경 사항을 적용하려면 `?reload` 명령을 수행하세요.")
 
 
 def setup(bot: commands.Bot) -> None:
