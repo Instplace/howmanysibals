@@ -8,19 +8,165 @@ import disnake
 from disnake.ext import commands
 
 class Counter(commands.Cog, name="욕설 감지기"):
+    class View(disnake.ui.View):
+        class Strict(disnake.ui.View):
+            class StrictSelect(disnake.ui.StringSelect):
+                def __init__(self, data: dict) -> None:
+                    texts = ["꺼짐", "간단", "보통", "엄격"]
+                    super().__init__(
+                        placeholder=f"새로운 감지 모드를 지정해주세요. 현재 '{texts[int(data['mode'])]}'",
+                        min_values=1,
+                        max_valaues=1,
+                        options=[
+                            disnake.SelectOption(label="꺼짐", value="0", description="로이드가 더 이상 스트라이크를 감지하지 않습니다.", emoji="🚫"),
+                            disnake.SelectOption(label="간단", value="1", description="스트라이크를 정확히 포함하는 경우에만 감지합니다.", emoji="❓"),
+                            disnake.SelectOption(label="보통 (기본값)", value="2", description="스트라이크 내부 혹은 주변에 특수문자 및 숫자가 있는 경우에는 감지합니다.", emoji="❗"),
+                            disnake.SelectOption(label="엄격", value="3", description="스트라이크 내부 혹은 주변에 어떠한 문자가 있더라도 감지합니다.", emoji="‼️")
+                        ],
+                        disabled=False,
+                        row=0
+                    )
+                
+                async def callback(self, inter: disnake.MessageInteraction):
+                    o = await aiomysql.connect(**inter.bot.config.mysql)
+                    c = await o.cursor(aiomysql.DictCursor)
+                    await c.execute(f"UPDATE `settings` SET `mode` = '{self.values[0]}' WHERE `guild` = '{inter.guild.id}'")
+                    o.close()
+                    await inter.response.edit_message(content=f"{str(self.options[int(self.values[0])].emoji)} > 설정 완료! 이제 감지 모드는 `{self.options[int(self.values[0])].label}`입니다.", view=None)
+
+
+            def __init__(self, ctx: commands.Context, msg: disnake.Message, data: dict) -> None:
+                super().__init__(timeout=30)
+                self.ctx = ctx
+                self.msg = msg
+                self.data = data
+                self.add_item(self.StrictSelect(data))
+            
+            async def interaction_check(self, inter: disnake.MessageInteraction) -> bool:
+                return self.ctx.author == inter.author
+            
+            async def on_timeout(self):
+                await self.msg.delete()
+
+            @disnake.ui.button(
+                label="취소하기",
+                style=disnake.ButtonStyle.red,
+                emoji="",
+                disabled=False,
+                row=1
+            )
+            async def _cancel(self, button: disnake.Button, inter: disnake.MessageInteraction) -> None:
+                await inter.response.pong()
+                await self.msg.delete()
+        
+
+        class Respond(disnake.ui.View):
+            class RespondSelect(disnake.ui.StringSelect):
+                def __init__(self, data: dict) -> None:
+                    texts = ["매너 모드", "약하게", "적당하게", "시끄럽게"]
+                    super().__init__(
+                        placeholder=f"새로운 응답 유형을 지정해주세요. 현재 '{texts[int(data['respond'])]}'",
+                        min_values=1,
+                        max_valaues=1,
+                        options=[
+                            disnake.SelectOption(label="매너 모드", value="0", description="로이드가 스트라이크를 감지하더라도 알리지 않습니다. 카운트는 추가됩니다.", emoji="🔇"),
+                            disnake.SelectOption(label="약하게", value="1", description="로이드가 스트라이크를 감지하면 해당 메시지에 반응을 추가합니다.", emoji="🔉"),
+                            disnake.SelectOption(label="적당하게 (기본값)", value="2", description="로이드가 스트라이크를 감지하면 유저를 멘션하며 스트라이크 감지를 알립니다.", emoji="🔊"),
+                            disnake.SelectOption(label="시끄럽게", value="3", description="로이드가 스트라이크를 감지하면 스트라이크 감지를 알리고, 해당 메시지를 삭제합니다.", emoji="📣")
+                        ],
+                        disabled=False,
+                        row=0
+                    )
+                
+                async def callback(self, inter: disnake.MessageInteraction):
+                    o = await aiomysql.connect(**inter.bot.config.mysql)
+                    c = await o.cursor(aiomysql.DictCursor)
+                    await c.execute(f"UPDATE `settings` SET `respond` = '{self.values[0]}' WHERE `guild` = '{inter.guild.id}'")
+                    o.close()
+                    await inter.response.edit_message(content=f"{str(self.options[int(self.values[0])].emoji)} > 설정 완료! 이제 `{self.options[int(self.values[0])].label}` 상태로 스트라이크에 반응합니다.", view=None)
+
+
+            def __init__(self, ctx: commands.Context, msg: disnake.Message, data: dict) -> None:
+                super().__init__(timeout=30)
+                self.ctx = ctx
+                self.msg = msg
+                self.data = data
+                self.add_item(self.RespondSelect(data))
+            
+            async def interaction_check(self, inter: disnake.MessageInteraction) -> bool:
+                return self.ctx.author == inter.author
+            
+            async def on_timeout(self):
+                await self.msg.delete()
+
+            @disnake.ui.button(
+                label="취소하기",
+                style=disnake.ButtonStyle.red,
+                emoji="",
+                disabled=False,
+                row=1
+            )
+            async def _cancel(self, button: disnake.Button, inter: disnake.MessageInteraction) -> None:
+                await inter.response.pong()
+                await self.msg.delete()
+
+
+        def __init__(self, ctx: commands.Context, msg: disnake.Message) -> None:
+            super().__init__(timeout=30)
+            self.ctx = ctx
+            self.msg = msg
+            self.views = {"strict": self.Strict, "respond": self.Respond}
+        
+        async def interaction_check(self, inter: disnake.MessageInteraction) -> bool:
+            return inter.author == self.ctx.author
+        
+        async def on_timeout(self):
+            await self.msg.delete()
+
+        @disnake.ui.string_select(
+            placeholder="변경할 설정을 선택해주세요.",
+            min_values=1,
+            max_values=1,
+            options=[
+                disnake.SelectOption(label="감지 모드 변경하기", value="strict", description="로이드의 스트라이크 감지 민감도를 설정합니다.", emoji="🚨").
+                disnake.SelectOption(label="응답 유형 변경하기", value="respond", description="로이드가 스트라이크를 감지했을 때의 응답을 조정합니다.", emoji="💬"),
+            ],
+            disabled=False,
+            row=0
+        )
+        async def _whatToChange(self, select: disnake.Select, inter: disnake.MessageInteraction) -> None:
+            o = await aiomysql.connect(**inter.bot.config.mysql)
+            c = await o.cursor(aiomysql.DictCursor)
+            await c.execute(f"SELECT * FROM `settings` WHERE `guild` = '{inter.guild.id}'")
+            rows = await c.fetchall()
+            data = rows[0]
+            await inter.response.edit_message(view=self.views[select.values](self.ctx, self.msg, data))
+            o.close()
+        
+        @disnake.ui.button(
+            label="취소하기",
+            style=disnake.ButtonStyle.red,
+            emoji="",
+            disabled=False,
+            row=1
+        )
+        async def _cancel(self, button: disnake.Button, inter: disnake.MessageInteraction) -> None:
+            await inter.response.pong()
+            await self.msg.delete()
+
+
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.mode = 2
     
-    async def find(self, content: str) -> Optional[List[str]]:
+    async def find(self, content: str, mode: int) -> Optional[List[str]]:
         if content.startswith("https://") or content.startswith("http://"):
             return
         
-        if self.mode < 1:
+        if mode < 1:
             return
 
         content = content.lower()
-        if self.mode >= 2:
+        if mode >= 2:
             exp = re.compile(r"[^a-zA-Zㄱ-ㅎㅏ-ㅣ가-힣]")
             removes = exp.findall(content)
             async for rem in self.async_list(removes):
@@ -29,7 +175,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
             async for detection in self.async_list(self.words[word]):
                 if detection in content:
                     return [word, detection]
-                if self.mode >= 3:
+                if mode >= 3:
                     w = re.compile(r"[a-zA-Zㄱ-ㅎㅏ-ㅣ가-힣]".join(detection))
                     result = w.findall(content)
                     if len(result) != 0:
@@ -43,6 +189,17 @@ class Counter(commands.Cog, name="욕설 감지기"):
     
     async def cog_load(self) -> None:
         await self.prepare()
+        await self.load_settings()
+    
+    async def load_settings(self) -> None:
+        await self.bot.wait_until_ready()
+        self.settings = {}
+        o = await aiomysql.connect(**self.bot.config.mysql)
+        c = await o.cursor(aiomysql.DictCursor)
+        await c.execute("SELECT * FROM `settings`")
+        rows = await c.fetchall()
+        async for row in self.async_list(rows):
+            self.settings[int(row["guild"])] = {"mode": int(row["mode"]), "respond": int(row["respond"])}
 
     async def prepare(self) -> None:
         await self.bot.wait_until_ready()
@@ -76,7 +233,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
         if msg.content.startswith("?word"):
             return
 
-        result = await self.find(msg.clean_content)
+        result = await self.find(msg.clean_content, self.settings[msg.guild.id]["mode"])
         if not result:
             return
         
@@ -92,38 +249,19 @@ Found : {result[1]}
         c = await o.cursor(aiomysql.DictCursor)
         await c.execute(f"INSERT INTO `counts` VALUES ('{result[0]}', '{msg.guild.id}', '{msg.author.id}')")
         o.close()
-        await msg.channel.send(f"""
+        rsp = self.settings[msg.guild.id]["respond"]
+        if rsp == 1:
+            await msg.add_reaction("<:absolute:1002916291226644572>")
+        elif rsp >= 2:
+            await msg.channel.send(f"""
 🌟 > {msg.author.mention}님이 카운트를 추가합니다!
 감지된 스트라이크 : {result[0]}
-        """)
+            """)
+            if rsp == 3:
+                await msg.delete()
+        else:
+            pass
     
-    @commands.Cog.listener("on_member_remove")
-    async def _removeData(self, member: disnake.Member) -> None:
-        if member.bot:
-            return
-
-        o = await aiomysql.connect(**self.bot.config.mysql)
-        c = await o.cursor(aiomysql.DictCursor)
-        await c.execute(f"DELETE FROM `counts` WHERE `user` = '{member.id}' AND `guild` = '{member.guild.id}'")
-        o.close()
-
-    @commands.command(name="mode")
-    @commands.is_owner()
-    async def _changeMode(self, ctx: commands.Context, mode: Optional[str] = None) -> None:
-        modes = {
-            "꺼짐": 0,
-            "간단": 1,
-            "기본": 2,
-            "엄격": 3
-        }
-        if mode is None:
-            await ctx.reply(f"🌟 > 현재 감지 모드는 `{list(modes)[self.mode]}`입니다.")
-        elif mode not in modes:
-            await ctx.reply(f"🌟 > `{mode}`(은)는 잘못된 모드 설정입니다.\n`꺼짐`, `간단`, `기본`, `엄격` 중에서 하나를 입력하세요.")
-        else:   
-            self.mode = modes[mode]
-            await ctx.reply(f"🌟 > 감지 모드가 `{mode}`으로 설정되었습니다.")
-
     @commands.command(name="total")
     @commands.is_owner()
     async def _totalCounts(self, ctx: commands.Context, word: str) -> None:
@@ -155,8 +293,9 @@ Found : {result[1]}
     async def _resetCounts(self, ctx: commands.Context) -> None:
         ask = await ctx.reply(f"""
 🔄 > 정말로 **{ctx.guild.name}** 서버의 전체 스트라이크 감지를 초기화하시겠습니까?
-**이 작업은 영구적이며, 실행 이후에는 되돌릴 수 없습니다!**
-되돌릴 수 없음을 이해했으며, 초기화 작업을 실행하시겠다면 `{self.bot.user.name}`를 입력하세요.
+**이 작업은 영구적이며, 실행 이후에는 실행 이전으로 되돌릴 수 없습니다!**
+이를 이해했으며, 초기화 작업을 실행하시겠다면 `{self.bot.user.name}`를 입력하세요.
+작업 요청은 30초 후에 만료됩니다. 즉시 취소하려면 `취소`를 입력하세요.
         """)
         def check(msg: disnake.Message) -> bool:
             return msg.author == ctx.author and msg.channel == ctx.channel and msg.content in [msg.guild.me.name, "취소"]
@@ -174,17 +313,40 @@ Found : {result[1]}
             await ask.delete()
             await ctx.reply(content=f":wastebasket: > **{ctx.guild.name}** 서버의 전체 스트라이크 감지를 초기화했습니다.")
 
-    @commands.group(name="word")
+    @commands.command(name="settings", aliases=["option", "config"])
+    @commands.is_owner()
+    async def _settings(self, ctx: commands.Context) -> None:
+        msg = await ctx.reply(f"⚙️ > 현재 {ctx.guild.name} 서버의 설정을 변경하고 있습니다...")
+        view = self.View(ctx, msg)
+        await msg.edit(view=view)
+        await view.wait()
+        await self.load_settings()
+
+    @commands.group(name="strike")
     @commands.is_owner()
     async def words(self, ctx: commands.Context) -> None:
         if ctx.invoked_subcommand is None:
             raise commands.BadArgument
 
+    @words.command(name="list")
+    @commands.is_owner()
+    async def _wordList(self, ctx: commands.Context) -> None:
+        content = ""
+        async for word in self.async_list(self.words):
+            content += f"\n{word} 단어에 추가된 스트라이크 목록 ({len(self.words[word])}개) :\n"
+            async for detection in self.async_list(self.words[word]):
+                content += f"{detection}\n"
+        
+        async with aiohttp.ClientSession() as cs:
+            async with cs.post("https://hastebin.com/documents", data=content) as r:
+                res = await r.json()
+                await ctx.reply(f"📜 > 현재 캐싱된 스트라이크 목록을 보려면 아래 링크를 확인하세요.\nhttps://hastebin.com/{res['key']}")
+
     @words.command(name="reload")
     @commands.is_owner()
     async def _reloadWord(self, ctx: commands.Context) -> None:
         await self.prepare()
-        await ctx.reply(f"🔄 > 단어 목록을 다시 불러왔습니다.")
+        await ctx.reply(f"🔄 > 스트라이크 목록을 다시 불러왔으며, 캐싱했습니다.")
 
     @words.command(name="add")
     @commands.is_owner()
@@ -193,7 +355,7 @@ Found : {result[1]}
         c = await o.cursor(aiomysql.DictCursor)
         await c.execute(f"INSERT INTO `detects` VALUES ('{detect}', '{word}')")
         o.close()
-        await ctx.reply("<:popcorn_k:949665093044535336> > 단어 추가에 성공했습니다! 변경 사항을 적용하려면 `?word reload` 명령을 수행하세요.")
+        await ctx.reply("<:popcorn_k:949665093044535336> > 스트라이크 추가에 성공했습니다! 변경 사항을 적용하려면 `?strike reload` 명령을 수행하세요.")
     
     @words.command(name="remove")
     @commands.is_owner()
@@ -202,7 +364,7 @@ Found : {result[1]}
         c = await o.cursor(aiomysql.DictCursor)
         await c.execute(f"DELETE FROM `detects` WHERE `detection` = '{detect}'")
         o.close()
-        await ctx.reply("<:popcorn_k:949665093044535336> > 단어를 삭제했습니다! 변경 사항을 적용하려면 `?word reload` 명령을 수행하세요.")
+        await ctx.reply("<:popcorn_k:949665093044535336> > 스트라이크를 삭제했습니다! 변경 사항을 적용하려면 `?strike reload` 명령을 수행하세요.")
 
 
 def setup(bot: commands.Bot) -> None:
