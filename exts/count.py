@@ -15,6 +15,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
     async def find(self, content: str) -> Optional[List[str]]:
         if content.startswith("https://") or content.startswith("http://"):
             return
+
         content = content.lower()
         exp = re.compile(r"[^a-zA-Zㄱ-ㅎㅏ-ㅣ가-힣]")
         removes = exp.findall(content)
