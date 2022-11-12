@@ -33,6 +33,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
                     await c.execute(f"UPDATE `settings` SET `mode` = '{self.values[0]}' WHERE `guild` = '{inter.guild.id}'")
                     o.close()
                     await inter.response.edit_message(content=f"{str(self.options[int(self.values[0])].emoji)} > 설정 완료! 이제 감지 모드는 `{self.options[int(self.values[0])].label}`입니다.", view=None)
+                    self.view.stop()
 
 
             def __init__(self, ctx: commands.Context, msg: disnake.Message, data: dict) -> None:
@@ -58,6 +59,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
             async def _cancel(self, button: disnake.Button, inter: disnake.MessageInteraction) -> None:
                 await inter.response.pong()
                 await self.msg.delete()
+                self.stop()
         
 
         class Respond(disnake.ui.View):
@@ -84,6 +86,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
                     await c.execute(f"UPDATE `settings` SET `respond` = '{self.values[0]}' WHERE `guild` = '{inter.guild.id}'")
                     o.close()
                     await inter.response.edit_message(content=f"{str(self.options[int(self.values[0])].emoji)} > 설정 완료! 이제 `{self.options[int(self.values[0])].label}` 상태로 스트라이크에 반응합니다.", view=None)
+                    self.view.stop()
 
 
             def __init__(self, ctx: commands.Context, msg: disnake.Message, data: dict) -> None:
@@ -109,10 +112,11 @@ class Counter(commands.Cog, name="욕설 감지기"):
             async def _cancel(self, button: disnake.Button, inter: disnake.MessageInteraction) -> None:
                 await inter.response.pong()
                 await self.msg.delete()
+                self.stop()
 
 
         def __init__(self, ctx: commands.Context, msg: disnake.Message) -> None:
-            super().__init__(timeout=30)
+            super().__init__(timeout=60)
             self.ctx = ctx
             self.msg = msg
             self.views = {"strict": self.Strict, "respond": self.Respond}
@@ -140,8 +144,11 @@ class Counter(commands.Cog, name="욕설 감지기"):
             await c.execute(f"SELECT * FROM `settings` WHERE `guild` = '{inter.guild.id}'")
             rows = await c.fetchall()
             data = rows[0]
-            await inter.response.edit_message(view=self.views[select.values[0]](self.ctx, self.msg, data))
+            view = self.views[select.values[0]](self.ctx, self.msg, data)
+            await inter.response.edit_message(view=view)
             o.close()
+            await view.wait()
+            self.stop()
         
         @disnake.ui.button(
             label="취소하기",
@@ -153,6 +160,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
         async def _cancel(self, button: disnake.Button, inter: disnake.MessageInteraction) -> None:
             await inter.response.pong()
             await self.msg.delete()
+            self.stop()
 
 
     def __init__(self, bot: commands.Bot) -> None:
@@ -230,7 +238,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
         if msg.channel.type == disnake.ChannelType.private:
             return
         
-        if msg.content.startswith("?word"):
+        if msg.content.startswith("?total") or msg.content.startswith("?strike add") or msg.content.startswith("?strike remove"):
             return
 
         result = await self.find(msg.clean_content, self.settings[msg.guild.id]["mode"])
