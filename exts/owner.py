@@ -9,8 +9,9 @@ class Owner(commands.Cog, name="쉬운 관리"):
 
     @commands.command(name="reload")
     async def _reload(self, ctx: commands.Context) -> None:
+        path = "./exts"
         files = os.listdir(path)
-        path = path.replace(".", "").replace("/", ".")
+        path = path.replace("./", "").replace("/", ".")
         result = {"failed_count": 0, "success_count": 0, "total": 0}
         for f in files:
             if not f.endswith(".py"):

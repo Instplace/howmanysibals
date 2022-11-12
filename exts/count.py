@@ -17,7 +17,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
         async for rem in self.async_list(removes):
             content = content.replace(rem, "")
         async for word in self.async_list(self.words):
-            async for detection in self.async_list(self.words["word"]):
+            async for detection in self.async_list(self.words[word]):
                 if detection in content:
                     return [word, detection]
                 w = re.compile(".".join(detection))
