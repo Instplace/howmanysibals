@@ -27,7 +27,7 @@ class Loid(commands.Bot):
         super().__init__(
             status=disnake.Status.dnd,
             activity=disnake.Activity(name="감지 단어을 카운트", type=disnake.ActivityType.playing),
-            command_prefix=".",
+            command_prefix="?",
             intents=disnake.Intents.all(),
             help_command=None,
         )
