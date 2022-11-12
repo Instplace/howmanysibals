@@ -73,7 +73,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
         if msg.channel.type == disnake.ChannelType.private:
             return
         
-        if msg.content.startswith("?add") or msg.content.startswith("?remove") or msg.content.startswith("?total"):
+        if msg.content.startswith("?word"):
             return
 
         result = await self.find(msg.clean_content)
@@ -165,6 +165,8 @@ Found : {result[1]}
         except:
             await ask.delete()
         else:
+            if msg.content == "취소":
+                return await ask.delete()
             o = await aiomysql.connect(**self.bot.config.mysql)
             c = await o.cursor(aiomysql.DictCursor)
             await c.execute(f"DELETE FROM `counts` WHERE `guild` = '{ctx.guild.id}'")
