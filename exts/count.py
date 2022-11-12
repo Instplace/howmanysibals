@@ -47,7 +47,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
                 self.words[row["word"]].append(row["detection"])
             registered += 1
         async with aiohttp.ClientSession() as cs:
-            webhook = disnake.Webhook(self.bot.config.webhook, session=cs, bot_token=self.bot.config.token)
+            webhook = disnake.Webhook.from_url(self.bot.config.webhook, session=cs, bot_token=self.bot.config.token)
             await webhook.send(f"Counter Preparing: {category} Categories, {registered} Words registered.")
         o.close()
 

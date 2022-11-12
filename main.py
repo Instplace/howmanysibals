@@ -31,11 +31,11 @@ class Loid(commands.Bot):
             intents=disnake.Intents.all(),
             help_command=None,
         )
-        self.config = self.Config("./")
+        self.config = self.Config("./.env")
     
     def preload(self, path: Optional[str] = "./exts") -> dict:
         files = os.listdir(path)
-        path = path.replace(".", "").replace("/", ".")
+        path = path.replace("./", "").replace("/", ".")
         result = {"failed_count": 0, "success_count": 0, "total": 0}
         for f in files:
             if not f.endswith(".py"):
