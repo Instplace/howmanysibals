@@ -63,6 +63,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
         if not result:
             return
         
+        print(result)
         await msg.add_reaction("<:screaming:949665490060587098>")
 
 
