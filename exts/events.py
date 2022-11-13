@@ -43,24 +43,9 @@ class Events(commands.Cog, name="기타 이벤트 탐지기"):
         o.close()
     
     @commands.Cog.listener("on_command_error")
-    async def _errorHandler(self, ctx: commands.Context, exc: Any) -> Any:
+    async def _errorHandler(self, ctx: commands.Context, exc: Any) -> None:
         if isinstance(exc, commands.CommandNotFound):
-            if len(ctx.message.content.strip().split(" ")) <= 1 and not ctx.message.content.startswith("?"):
-                return
-
-            embed = disnake.Embed(
-                title="입력하신 내용을 정확히 이해할 수 없습니다.",
-                description="""
-명령어에 오타가 있진 않은지, 사라진 명령어가 아닌지 다시 확인해보세요.
-조언 하나 하자면, 잘 모른다면 건드려보지 않는 것을 권장합니다.
-                """,
-                color=0xFF3333,
-                timestamp=datetime.now(timezone.utc),
-            )
-            embed.set_author(name="명령어를 찾을 수 없음", icon_url=ctx.guild.icon.url)
-            embed.set_thumbnail(url=ctx.author.display_avatar.replace(static_format="png", size=2048).url)
-            embed.set_footer(text="도와줘! 로이드맨!", icon_url=self.bot.user.display_avatar.url)
-            await ctx.reply(embed=embed)
+            return
         elif any([
             isinstance(exc, commands.NotOwner),
             isinstance(exc, commands.MissingPermissions),
@@ -78,7 +63,7 @@ class Events(commands.Cog, name="기타 이벤트 탐지기"):
             )
             embed.set_author(name="실행 권한 부족", icon_url=ctx.guild.icon.url)
             embed.set_thumbnail(url=ctx.author.display_avatar.replace(static_format="png", size=2048).url)
-            embed.set_footer(text="도와줘! 로이드맨!", icon_url=self.bot.user.display_avatar.url)
+            embed.set_footer(text="도와줘요, 로이드맨!", icon_url=self.bot.user.display_avatar.url)
             await ctx.reply(embed=embed)
         elif isinstance(exc, commands.UserInputError):
             embed = disnake.Embed(
@@ -92,7 +77,7 @@ class Events(commands.Cog, name="기타 이벤트 탐지기"):
             )
             embed.set_author(name="잘못된 입력값", icon_url=ctx.guild.icon.url)
             embed.set_thumbnail(url=ctx.author.display_avatar.replace(static_format="png", size=2048).url)
-            embed.set_footer(text="도와줘! 로이드맨!", icon_url=self.bot.user.display_avatar.url)
+            embed.set_footer(text="도와줘요, 로이드맨!", icon_url=self.bot.user.display_avatar.url)
             await ctx.reply(embed=embed)
         else:
             embed = disnake.Embed(
@@ -109,7 +94,7 @@ class Events(commands.Cog, name="기타 이벤트 탐지기"):
             )
             embed.set_author(name="예기치 못한 오류", icon_url=ctx.guild.icon.url)
             embed.set_thumbnail(url=ctx.author.display_avatar.replace(static_format="png", size=2048).url)
-            embed.set_footer(text="도와줘! 로이드맨!", icon_url=self.bot.user.display_avatar.url)
+            embed.set_footer(text="도와줘요, 로이드맨!", icon_url=self.bot.user.display_avatar.url)
             await ctx.reply(embed=embed)
 
 

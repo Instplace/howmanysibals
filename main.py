@@ -26,7 +26,7 @@ class Loid(commands.Bot):
     def __init__(self) -> None:
         super().__init__(
             status=disnake.Status.dnd,
-            activity=disnake.Activity(name="도와줘요, 로이드맨!", type=disnake.ActivityType.competing),
+            activity=disnake.Activity(name="도와줘요, 로이드맨!", type=disnake.ActivityType.listening),
             command_prefix="?",
             intents=disnake.Intents.all(),
             help_command=None,

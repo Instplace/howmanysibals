@@ -21,7 +21,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
                         options=[
                             disnake.SelectOption(label="꺼짐", value="0", description="로이드가 더 이상 스트라이크를 감지하지 않습니다.", emoji="🚫"),
                             disnake.SelectOption(label="간단", value="1", description="스트라이크를 정확히 포함하는 경우에만 감지합니다.", emoji="❓"),
-                            disnake.SelectOption(label="보통 (기본값)", value="2", description="스트라이크 내부 혹은 주변에 특수문자 및 숫자가 있는 경우에는 감지합니다.", emoji="❗"),
+                            disnake.SelectOption(label="보통", value="2", description="스트라이크 내부 혹은 주변에 특수문자 및 숫자가 있는 경우에는 감지합니다.", emoji="❗"),
                             disnake.SelectOption(label="엄격", value="3", description="스트라이크 내부 혹은 주변에 어떠한 문자가 있더라도 감지합니다.", emoji="‼️")
                         ],
                         disabled=False,
@@ -74,7 +74,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
                         options=[
                             disnake.SelectOption(label="매너 모드", value="0", description="로이드가 스트라이크를 감지하더라도 알리지 않습니다. 카운트는 추가됩니다.", emoji="🔇"),
                             disnake.SelectOption(label="약하게", value="1", description="로이드가 스트라이크를 감지하면 해당 메시지에 반응을 추가합니다.", emoji="🔉"),
-                            disnake.SelectOption(label="적당하게 (기본값)", value="2", description="로이드가 스트라이크를 감지하면 유저를 멘션하며 스트라이크 감지를 알립니다.", emoji="🔊"),
+                            disnake.SelectOption(label="적당하게", value="2", description="로이드가 스트라이크를 감지하면 유저를 멘션하며 스트라이크 감지를 알립니다.", emoji="🔊"),
                             disnake.SelectOption(label="시끄럽게", value="3", description="로이드가 스트라이크를 감지하면 스트라이크 감지를 알리고, 해당 메시지를 삭제합니다.", emoji="📣")
                         ],
                         disabled=False,
