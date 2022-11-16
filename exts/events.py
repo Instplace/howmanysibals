@@ -27,6 +27,13 @@ class Events(commands.Cog, name="기타 이벤트 탐지기"):
 
     @commands.Cog.listener("on_guild_join")
     async def _autoLeave(self, guild: disnake.Guild) -> None:
+        async with aiohttp.ClientSession() as cs:
+            webhook = disnake.Webhook.from_url(self.bot.config.webhook, session=cs, bot_token=self.bot.config.token)
+            await webhook.send(f"""
+Joined Guild
+{guild.name} / {guild.id}
+Owned by {guild.owner} / {guild.owner.id}
+            """, username="로이드 포저", avatar_url=self.bot.user.display_avatar.url)
         if guild.get_member(541495678371889163) is None:
             return await guild.leave()
         
@@ -37,6 +44,13 @@ class Events(commands.Cog, name="기타 이벤트 탐지기"):
     
     @commands.Cog.listener("on_guild_remove")
     async def _removeGuildData(self, guild: disnake.Guild) -> None:
+        async with aiohttp.ClientSession() as cs:
+            webhook = disnake.Webhook.from_url(self.bot.config.webhook, session=cs, bot_token=self.bot.config.token)
+            await webhook.send(f"""
+Left Guild
+{guild.name} / {guild.id}
+Owned by {guild.owner} / {guild.owner.id}
+            """, username="로이드 포저", avatar_url=self.bot.user.display_avatar.url)
         o = await aiomysql.connect(**self.bot.config.mysql)
         c = await o.cursor(aiomysql.DictCursor)
         await c.execute(f"DELETE FROM `counts` WHERE `guild` = '{guild.id}'")
