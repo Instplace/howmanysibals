@@ -272,7 +272,7 @@ Found : {result[1]}
             pass
     
     @commands.command(name="total")
-    @commands.is_owner()
+    @commands.has_permissions(manage_guild=True)
     async def _totalCounts(self, ctx: commands.Context, word: str) -> None:
         o = await aiomysql.connect(**self.bot.config.mysql)
         c = await o.cursor(aiomysql.DictCursor)
@@ -298,7 +298,7 @@ Found : {result[1]}
         o.close()
 
     @commands.command(name="reset")
-    @commands.is_owner()
+    @commands.has_permissions(manage_guild=True)
     async def _resetCounts(self, ctx: commands.Context) -> None:
         ask = await ctx.reply(f"""
 🔄 > 정말로 **{ctx.guild.name}** 서버의 전체 스트라이크 감지를 초기화하시겠습니까?
@@ -323,7 +323,7 @@ Found : {result[1]}
             await ctx.reply(content=f":wastebasket: > **{ctx.guild.name}** 서버의 전체 스트라이크 감지를 초기화했습니다.")
 
     @commands.command(name="settings", aliases=["option", "config"])
-    @commands.is_owner()
+    @commands.has_permissions(manage_guild=True)
     async def _settings(self, ctx: commands.Context) -> None:
         msg = await ctx.reply(f"⚙️ > 현재 {ctx.guild.name} 서버의 설정을 변경하고 있습니다...")
         view = self.View(ctx, msg)
