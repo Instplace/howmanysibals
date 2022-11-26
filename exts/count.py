@@ -173,11 +173,10 @@ class Counter(commands.Cog, name="욕설 감지기"):
             if ctx.guild is None:
                 return False
             owner = await ctx.bot.is_owner(ctx.author)
-            perm = await original(ctx)
-            if owner is True or perm is True:
+            if owner is True:
                 return True
             else:
-                raise commands.MissingPermissions(missing_perms=["manage_guild"])
+                return await original(ctx)
         return commands.check(predicate)
     
     async def find(self, content: str, mode: int) -> Optional[List[str]]:
