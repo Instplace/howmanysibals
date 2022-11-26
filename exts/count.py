@@ -122,6 +122,19 @@ class Counter(commands.Cog, name="욕설 감지기"):
             self.msg = msg
             self.views = {"strict": self.Strict, "respond": self.Respond}
         
+        def is_admin():
+            async def predicate(ctx):
+                original = commands.has_permissions(manage_guild=True).predicate
+                if ctx.guild is None:
+                    return False
+                owner = await ctx.bot.is_owner(ctx.author)
+                perm = await original(ctx)
+                if owner is True or perm is True:
+                    return True
+                else:
+                    raise commands.MissingPermissions(missing_perms=["manage_guild"])
+            return commands.check(predicate)
+        
         async def interaction_check(self, inter: disnake.MessageInteraction) -> bool:
             return inter.author == self.ctx.author
         
@@ -272,7 +285,7 @@ Found : {result[1]}
             pass
     
     @commands.command(name="total")
-    @commands.has_permissions(manage_guild=True)
+    @is_admin()
     async def _totalCounts(self, ctx: commands.Context, word: str) -> None:
         o = await aiomysql.connect(**self.bot.config.mysql)
         c = await o.cursor(aiomysql.DictCursor)
@@ -298,7 +311,7 @@ Found : {result[1]}
         o.close()
 
     @commands.command(name="reset")
-    @commands.has_permissions(manage_guild=True)
+    @is_admin()
     async def _resetCounts(self, ctx: commands.Context) -> None:
         ask = await ctx.reply(f"""
 🔄 > 정말로 **{ctx.guild.name}** 서버의 전체 스트라이크 감지를 초기화하시겠습니까?
@@ -323,7 +336,7 @@ Found : {result[1]}
             await ctx.reply(content=f":wastebasket: > **{ctx.guild.name}** 서버의 전체 스트라이크 감지를 초기화했습니다.")
 
     @commands.command(name="settings", aliases=["option", "config"])
-    @commands.has_permissions(manage_guild=True)
+    @is_admin()
     async def _settings(self, ctx: commands.Context) -> None:
         msg = await ctx.reply(f"⚙️ > 현재 {ctx.guild.name} 서버의 설정을 변경하고 있습니다...")
         view = self.View(ctx, msg)
