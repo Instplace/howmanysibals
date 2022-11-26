@@ -122,19 +122,6 @@ class Counter(commands.Cog, name="욕설 감지기"):
             self.msg = msg
             self.views = {"strict": self.Strict, "respond": self.Respond}
         
-        def is_admin():
-            async def predicate(ctx):
-                original = commands.has_permissions(manage_guild=True).predicate
-                if ctx.guild is None:
-                    return False
-                owner = await ctx.bot.is_owner(ctx.author)
-                perm = await original(ctx)
-                if owner is True or perm is True:
-                    return True
-                else:
-                    raise commands.MissingPermissions(missing_perms=["manage_guild"])
-            return commands.check(predicate)
-        
         async def interaction_check(self, inter: disnake.MessageInteraction) -> bool:
             return inter.author == self.ctx.author
         
@@ -179,6 +166,19 @@ class Counter(commands.Cog, name="욕설 감지기"):
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+    
+    def is_admin():
+        async def predicate(ctx):
+            original = commands.has_permissions(manage_guild=True).predicate
+            if ctx.guild is None:
+                return False
+            owner = await ctx.bot.is_owner(ctx.author)
+            perm = await original(ctx)
+            if owner is True or perm is True:
+                return True
+            else:
+                raise commands.MissingPermissions(missing_perms=["manage_guild"])
+        return commands.check(predicate)
     
     async def find(self, content: str, mode: int) -> Optional[List[str]]:
         if content.startswith("https://") or content.startswith("http://"):
