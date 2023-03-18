@@ -28,7 +28,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
                         row=0
                     )
                 
-                async def callback(self, inter: disnake.MessageInteraction):
+                async def callback(self, inter: disnake.MessageInteraction) -> None:
                     o = await aiomysql.connect(**inter.bot.config.mysql)
                     c = await o.cursor(aiomysql.DictCursor)
                     await c.execute(f"UPDATE `settings` SET `mode` = '{self.values[0]}' WHERE `guild` = '{inter.guild.id}'")
@@ -37,18 +37,17 @@ class Counter(commands.Cog, name="욕설 감지기"):
                     self.view.stop()
 
 
-            def __init__(self, ctx: commands.Context, msg: disnake.Message, data: dict) -> None:
+            def __init__(self, inter: disnake.ApplicationCommandInteraction, data: dict) -> None:
                 super().__init__(timeout=30)
-                self.ctx = ctx
-                self.msg = msg
+                self.inter = inter
                 self.data = data
                 self.add_item(self.StrictSelect(data))
             
             async def interaction_check(self, inter: disnake.MessageInteraction) -> bool:
-                return self.ctx.author == inter.author
+                return self.inter.author == inter.author
             
-            async def on_timeout(self):
-                await self.msg.delete()
+            async def on_timeout(self) -> None:
+                await self.inter.delete_original_message()
 
             @disnake.ui.button(
                 label="취소하기",
@@ -59,7 +58,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
             )
             async def _cancel(self, button: disnake.Button, inter: disnake.MessageInteraction) -> None:
                 await inter.response.pong()
-                await self.msg.delete()
+                await self.inter.delete_original_message()
                 self.stop()
         
 
@@ -81,7 +80,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
                         row=0
                     )
                 
-                async def callback(self, inter: disnake.MessageInteraction):
+                async def callback(self, inter: disnake.MessageInteraction) -> None:
                     o = await aiomysql.connect(**inter.bot.config.mysql)
                     c = await o.cursor(aiomysql.DictCursor)
                     await c.execute(f"UPDATE `settings` SET `respond` = '{self.values[0]}' WHERE `guild` = '{inter.guild.id}'")
@@ -90,18 +89,17 @@ class Counter(commands.Cog, name="욕설 감지기"):
                     self.view.stop()
 
 
-            def __init__(self, ctx: commands.Context, msg: disnake.Message, data: dict) -> None:
+            def __init__(self, inter: disnake.ApplicationCommandInteraction, data: dict) -> None:
                 super().__init__(timeout=30)
-                self.ctx = ctx
-                self.msg = msg
+                self.inter = inter
                 self.data = data
                 self.add_item(self.RespondSelect(data))
             
             async def interaction_check(self, inter: disnake.MessageInteraction) -> bool:
-                return self.ctx.author == inter.author
+                return self.inter.author == inter.author
             
-            async def on_timeout(self):
-                await self.msg.delete()
+            async def on_timeout(self) -> None:
+                await self.inter.delete_original_message()
 
             @disnake.ui.button(
                 label="취소하기",
@@ -112,21 +110,20 @@ class Counter(commands.Cog, name="욕설 감지기"):
             )
             async def _cancel(self, button: disnake.Button, inter: disnake.MessageInteraction) -> None:
                 await inter.response.pong()
-                await self.msg.delete()
+                await self.inter.delete_original_message()
                 self.stop()
 
 
-        def __init__(self, ctx: commands.Context, msg: disnake.Message) -> None:
+        def __init__(self, inter: disnake.ApplicationCommandInteraction) -> None:
             super().__init__(timeout=60)
-            self.ctx = ctx
-            self.msg = msg
+            self.inter = inter
             self.views = {"strict": self.Strict, "respond": self.Respond}
         
         async def interaction_check(self, inter: disnake.MessageInteraction) -> bool:
-            return inter.author == self.ctx.author
+            return inter.author == self.inter.author
         
-        async def on_timeout(self):
-            await self.msg.delete()
+        async def on_timeout(self) -> None:
+            await self.inter.delete_original_message()
 
         @disnake.ui.string_select(
             placeholder="변경할 설정을 선택해주세요.",
@@ -145,7 +142,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
             await c.execute(f"SELECT * FROM `settings` WHERE `guild` = '{inter.guild.id}'")
             rows = await c.fetchall()
             data = rows[0]
-            view = self.views[select.values[0]](self.ctx, self.msg, data)
+            view = self.views[select.values[0]](self.inter, data)
             await inter.response.edit_message(view=view)
             o.close()
             await view.wait()
@@ -160,25 +157,23 @@ class Counter(commands.Cog, name="욕설 감지기"):
         )
         async def _cancel(self, button: disnake.Button, inter: disnake.MessageInteraction) -> None:
             await inter.response.pong()
-            await self.msg.delete()
+            await self.inter.delete_original_message()
             self.stop()
 
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
     
-    def is_admin():
-        async def predicate(ctx):
-            original = commands.has_permissions(manage_guild=True).predicate
-            if ctx.guild is None:
-                return False
-            owner = await ctx.bot.is_owner(ctx.author)
-            if owner is True:
-                return True
-            else:
-                return await original(ctx)
-        return commands.check(predicate)
-    
+    async def check_admin(self, inter: disnake.ApplicationCommandInteraction) -> bool:
+        original = commands.has_permissions(manage_guild=True).predicate
+        if inter.guild is None:
+            return False
+        owner = await inter.bot.is_owner(inter.author)
+        if owner is True:
+            return True
+        else:
+            return await original(inter)
+
     async def find(self, content: str, mode: int) -> Optional[List[str]]:
         if content.startswith("https://") or content.startswith("http://"):
             return
@@ -251,9 +246,6 @@ class Counter(commands.Cog, name="욕설 감지기"):
         if msg.channel.type == disnake.ChannelType.private:
             return
         
-        if msg.content.startswith("?total") or msg.content.startswith("?strike add") or msg.content.startswith("?strike remove"):
-            return
-
         result = await self.find(msg.clean_content, self.settings[msg.guild.id]["mode"])
         if not result:
             return
@@ -283,73 +275,116 @@ Found : {result[1]}
         else:
             pass
     
-    @commands.command(name="total")
-    @is_admin()
-    async def _totalCounts(self, ctx: commands.Context, word: str) -> None:
+    @commands.slash_command(name="count")
+    async def total(self, inter: disnake.ApplicationCommandInteraction) -> None:
+        return await inter.response.pong()
+
+    @total.sub_command(name="word", description="특정 트리거에 대한 전체 유저의 사용 수를 조회합니다.", dm_permission=False)
+    async def _totalWord(
+        self,
+        inter: disnake.ApplicationCommandInteraction,
+        word: str = commands.Param(name="스트라이크", desc="조회할 스트라이크를 지정해주세요.")
+    ) -> None:
+        admin = await self.check_admin(inter)
+        if not admin:
+            return await inter.response.send_message("> 🚷 이 기능을 실행하려면 서버 또는 봇의 관리자여야 합니다.", ephemeral=True)
+        await inter.response.defer()
         o = await aiomysql.connect(**self.bot.config.mysql)
         c = await o.cursor(aiomysql.DictCursor)
-        await c.execute(f"SELECT * FROM `counts` WHERE `word` = '{word}' AND `guild` = '{ctx.guild.id}'")
+        await c.execute(f"SELECT * FROM `counts` WHERE `word` = '{word}' AND `guild` = '{inter.guild.id}'")
         rows = await c.fetchall()
         if not rows:
-            await ctx.reply(f"<a:clap:949665959084458036> > 아직 {word} 스트라이크를 발견하지 못했습니다.")
-        else:
-            datas = {}
-            async for row in self.async_list(rows):
-                if row["user"] not in datas:
-                    datas[row["user"]] = 1
-                else:
-                    datas[row["user"]] += 1
-            content = "```\n"
-            async for d in self.async_list(datas):
-                user = ctx.guild.get_member(int(d))
-                if not user:
-                    continue
-                content += f"{user.display_name} - {datas[d]}회\n"
-            content += f"```\n🌟 > {ctx.guild.name} 서버 내 {word} 스트라이크의 감지 횟수는 총 **{len(rows)}회**입니다."
-            await ctx.reply(content)
+            return await inter.edit_original_message(content=f"> <a:clap:949665959084458036> 아직 `{word}` 스트라이크를 발견하지 못했습니다.")
+        datas = {}
+        async for row in self.async_list(rows):
+            if row["user"] not in datas:
+                datas[row["user"]] = 1
+            else:
+                datas[row["user"]] += 1
+        content = ">>> ```\n"
+        async for d in self.async_list(datas):
+            user = inter.guild.get_member(int(d))
+            if not user:
+                continue
+            content += f"{user.display_name} - {datas[d]}회\n"
+        content += f"```\n🌟 {inter.guild.name} 서버 내 `{word}` 스트라이크의 감지 횟수는 총 **{len(rows)}회**입니다."
+        await inter.edit_original_message(content=content)
+        o.close()
+    
+    @total.sub_command(name="user", description="특정 유저에 대한 전체 스트라이크의 사용 수를 조회합니다.")
+    async def _totalUser(
+        self,
+        inter: disnake.ApplicationCommandInteraction,
+        member: disnake.Member = commands.Param(name="유저", desc="스트라이크를 조회할 유저를 지정해주세요.")
+    ) -> None:
+        admin = await self.check_admin(inter)
+        if not admin:
+            return await inter.response.send_message("> 🚷 이 기능을 실행하려면 서버 또는 봇의 관리자여야 합니다.", ephemeral=True)
+        o = await aiomysql.connect(**self.bot.config.mysql)
+        c = await o.cursor(aiomysql.DictCursor)
+        await c.execute(f"SELECT * FROM `counts` WHERE `user` = '{member.id}' AND `guild` = '{inter.guild.id}'")
+        rows = await c.fetchall()
+        if not rows:
+            return await inter.edit_original_message(content=f"> <a:clap:949665959084458036> **{member.display_name}**님은 아직 스트라이크에 걸리지 않았습니다.")
+        datas = {}
+        async for row in self.async_list(rows):
+            if row["user"] not in datas:
+                datas[row["user"]] = 1
+            else:
+                datas[row["user"]] += 1
+        content = ">>> ```\n"
+        async for d in self.async_list(datas):
+            user = inter.guild.get_member(int(d))
+            if not user:
+                continue
+            content += f"{user.display_name} - {datas[d]}회\n"
+        content += f"```\n🌟 {inter.guild.name} 서버 내 **{member.display_name}**님의 스트라이크 감지 횟수는 총 **{len(rows)}회**입니다."
+        await inter.edit_original_message(content=content)
         o.close()
 
     @commands.command(name="reset")
-    @is_admin()
-    async def _resetCounts(self, ctx: commands.Context) -> None:
-        ask = await ctx.reply(f"""
-🔄 > 정말로 **{ctx.guild.name}** 서버의 전체 스트라이크 감지를 초기화하시겠습니까?
+    async def _totalReset(self, inter: disnake.ApplicationCommandInteraction) -> None:
+        admin = await self.check_admin(inter)
+        if not admin:
+            return await inter.response.send_message("> 🚷 이 기능을 실행하려면 서버 또는 봇의 관리자여야 합니다.", ephemeral=True)
+        await inter.response.send_message(f"""
+🔄 > 정말로 **{inter.guild.name}** 서버의 전체 스트라이크 감지를 초기화하시겠습니까?
 **이 작업은 영구적이며, 실행 이후에는 실행 이전으로 되돌릴 수 없습니다!**
 이를 이해했으며, 초기화 작업을 실행하시겠다면 `{self.bot.user.name}`를 입력하세요.
 작업 요청은 30초 후에 만료됩니다. 즉시 취소하려면 `취소`를 입력하세요.
         """)
         def check(msg: disnake.Message) -> bool:
-            return msg.author == ctx.author and msg.channel == ctx.channel and msg.content in [msg.guild.me.name, "취소"]
+            return msg.author == inter.author and msg.channel == inter.channel and msg.content in [msg.guild.me.name, "취소"]
         try:
             msg = await self.bot.wait_for("message", timeout=30, check=check)
         except:
-            await ask.delete()
+            return await inter.delete_original_message()
         else:
             if msg.content == "취소":
-                return await ask.delete()
+                return await inter.delete_original_message()
             o = await aiomysql.connect(**self.bot.config.mysql)
             c = await o.cursor(aiomysql.DictCursor)
-            await c.execute(f"DELETE FROM `counts` WHERE `guild` = '{ctx.guild.id}'")
+            await c.execute(f"DELETE FROM `counts` WHERE `guild` = '{inter.guild.id}'")
             o.close()
-            await ask.delete()
-            await ctx.reply(content=f":wastebasket: > **{ctx.guild.name}** 서버의 전체 스트라이크 감지를 초기화했습니다.")
+            await inter.delete_original_message()
+            await inter.followup.send(content=f":wastebasket: > **{inter.guild.name}** 서버의 모든 스트라이크 기록을 초기화했습니다.")
 
-    @commands.command(name="settings", aliases=["option", "config"])
-    @is_admin()
-    async def _settings(self, ctx: commands.Context) -> None:
-        msg = await ctx.reply(f"⚙️ > 현재 {ctx.guild.name} 서버의 설정을 변경하고 있습니다...")
-        view = self.View(ctx, msg)
-        await msg.edit(view=view)
+    @commands.slash_command(name="settings", description="로이드 포저의 설정을 변경합니다.")
+    async def _settings(self, inter: disnake.ApplicationCommandInteraction) -> None:
+        admin = await self.check_admin(inter)
+        if not admin:
+            return await inter.response.send_message("> 🚷 이 기능을 실행하려면 서버 또는 봇의 관리자여야 합니다.", ephemeral=True)
+        await inter.response.send_message(f"⚙️ > 현재 {inter.guild.name} 서버의 설정을 변경하고 있습니다...")
+        view = self.View(inter)
+        await inter.edit_original_message(view=view)
         await view.wait()
         await self.load_settings()
 
-    @commands.group(name="strike")
-    @commands.is_owner()
-    async def words(self, ctx: commands.Context) -> None:
-        if ctx.invoked_subcommand is None:
-            raise commands.BadArgument
+    @commands.slash_command(name="strike")
+    async def words(self, inter: disnake.ApplicationCommandInteraction) -> None:
+        return await inter.response.pong()
 
-    @words.command(name="list")
+    @words.command(name="list", description="현재 등록되어 있는 모든 스트라이크의 목록을 불러옵니다.")
     @commands.is_owner()
     async def _wordList(self, ctx: commands.Context) -> None:
         content = ""
@@ -359,13 +394,13 @@ Found : {result[1]}
                 content += f"{detection}\n"
 
         data = io.StringIO(content)
-        await ctx.reply(f"📜 > 현재 캐싱된 스트라이크 목록을 보려면 아래 파일을 확인하세요.", file=disnake.File(fp=data, filename="strikes.txt"))
+        await ctx.reply("📜 > 현재 캐싱된 스트라이크 목록을 보려면 아래 파일을 확인하세요.", file=disnake.File(fp=data, filename="strikes.txt"))
 
     @words.command(name="reload")
     @commands.is_owner()
     async def _reloadWord(self, ctx: commands.Context) -> None:
         await self.prepare()
-        await ctx.reply(f"🔄 > 스트라이크 목록을 다시 불러왔으며, 캐싱했습니다.")
+        await ctx.reply("🔄 > 스트라이크 목록을 다시 불러왔으며, 캐싱했습니다.")
 
     @words.command(name="add")
     @commands.is_owner()

@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from typing import Any
 
+import aiohttp
 import aiomysql
 import disnake
 from disnake.ext import commands

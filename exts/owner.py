@@ -1,6 +1,5 @@
 import os
 
-import disnake
 from disnake.ext import commands
 
 class Owner(commands.Cog, name="쉬운 관리"):
