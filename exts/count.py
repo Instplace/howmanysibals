@@ -227,9 +227,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
         async for word in self.async_list(self.words[msg.guild.id]):
             async for detection in self.async_list(self.words[msg.guild.id][word]):
                 if mode >= 1:
-                    while detection in content:
-                        result.append([word, detection])
-                        content = content.replace(detection, "", 1)
+                    result.append([word, detection])
                 if mode == "deprecated":
                     w = re.compile(r"[a-zA-Zㄱ-ㅎㅏ-ㅣ가-힣]".join(detection))
                     finder = w.findall(content)
