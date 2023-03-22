@@ -58,8 +58,8 @@ Owned by {guild.owner} / {guild.owner.id}
         await c.execute(f"DELETE FROM `settings` WHERE `guild` = '{guild.id}'")
         o.close()
     
-    @commands.Cog.listener("on_command_error")
-    async def _errorHandler(self, ctx: commands.Context, exc: Any) -> None:
+    @commands.Cog.listener("on_slash_command_error")
+    async def _errorHandler(self, inter: disnake.ApplicationCommandInteraction, exc: Any) -> None:
         if isinstance(exc, commands.CommandNotFound):
             return
         elif any([
@@ -77,24 +77,10 @@ Owned by {guild.owner} / {guild.owner.id}
                 color=0xFF3333,
                 timestamp=datetime.now(timezone.utc),
             )
-            embed.set_author(name="실행 권한 부족", icon_url=ctx.guild.icon.url)
-            embed.set_thumbnail(url=ctx.author.display_avatar.replace(static_format="png", size=2048).url)
+            embed.set_author(name="실행 권한 부족", icon_url=inter.guild.icon.url)
+            embed.set_thumbnail(url=inter.author.display_avatar.replace(static_format="png", size=2048).url)
             embed.set_footer(text="도와줘요, 로이드맨!", icon_url=self.bot.user.display_avatar.url)
-            await ctx.reply(embed=embed)
-        elif isinstance(exc, commands.UserInputError):
-            embed = disnake.Embed(
-                title="필수 입력값이 잘못되었거나, 존재하지 않습니다.",
-                description="""
-필수로 지정된 입력값이 없거나, 입력한 값이 잘못되었습니다.
-명령어 사용법이 익숙하지 않다면 개발자에게 문의하세요.
-                """,
-                color=0xFF3333,
-                timestamp=datetime.now(timezone.utc),
-            )
-            embed.set_author(name="잘못된 입력값", icon_url=ctx.guild.icon.url)
-            embed.set_thumbnail(url=ctx.author.display_avatar.replace(static_format="png", size=2048).url)
-            embed.set_footer(text="도와줘요, 로이드맨!", icon_url=self.bot.user.display_avatar.url)
-            await ctx.reply(embed=embed)
+            await inter.response.send_message(embed=embed, ephemeral=True)
         else:
             embed = disnake.Embed(
                 title="알 수 없는 오류가 발생했습니다.",
@@ -108,10 +94,16 @@ Owned by {guild.owner} / {guild.owner.id}
                 color=0x5555FF,
                 timestamp=datetime.now(timezone.utc),
             )
-            embed.set_author(name="예기치 못한 오류", icon_url=ctx.guild.icon.url)
-            embed.set_thumbnail(url=ctx.author.display_avatar.replace(static_format="png", size=2048).url)
+            embed.set_author(name="예기치 못한 오류", icon_url=inter.guild.icon.url)
+            embed.set_thumbnail(url=inter.author.display_avatar.replace(static_format="png", size=2048).url)
             embed.set_footer(text="도와줘요, 로이드맨!", icon_url=self.bot.user.display_avatar.url)
-            await ctx.reply(embed=embed)
+            try:
+                await inter.response.send_message(embed=embed, ephemeral=True)
+            except:
+                try:
+                    await inter.edit_original_message(content="", embed=embed, view=None)
+                except:
+                    await inter.followup.send(embed=embed)
 
 
 def setup(bot: commands.Bot) -> None:
