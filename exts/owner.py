@@ -7,9 +7,10 @@ class Owner(commands.Cog, name="쉬운 관리"):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @commands.command(name="reload")
+    @commands.slash_command(name="restart", description="다시 불러옵니다. 그것이 리로드니까. 음!")
     @commands.is_owner()
-    async def _reload(self, ctx: commands.Context) -> None:
+    async def _reload(self, inter: disnake.ApplicationCommandInteraction) -> None:
+        await inter.response.defer(ephemeral=True)
         path = "./exts"
         files = os.listdir(path)
         path = path.replace("./", "").replace("/", ".")
@@ -28,10 +29,10 @@ class Owner(commands.Cog, name="쉬운 관리"):
                 result[f[:-3]] = "Success"
             finally:
                 result["total"] += 1
-        await ctx.reply(f"""
-<:congrat:949665168017743922> > 전체 확장에 대해 다시 불러오기 작업을 수행했습니다.
-정상적으로 불러온 확장 : {result['success_count']}개
-불러오기에 실패한 확장 : {result['failed_count']}개
+        await inter.edit_original_message(f"""
+> <:congrat:949665168017743922> 전체 확장에 대해 다시 불러오기 작업을 수행했습니다.
+> :white_check_mark: 정상적으로 불러온 확장 : {result['success_count']}개
+> :x: 불러오기에 실패한 확장 : {result['failed_count']}개
         """)
 
 

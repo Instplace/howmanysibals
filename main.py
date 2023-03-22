@@ -1,7 +1,6 @@
 import os
 from typing import Optional
 
-import aiomysql
 import disnake
 from disnake.ext import commands
 from dotenv import load_dotenv
