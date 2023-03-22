@@ -315,7 +315,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
         else:
             pass
     
-    @commands.slash_command(name="count", dm_permission=False)
+    @commands.slash_command(name="count", dm_permission=False, default_member_permissions=disnake.Permissions(manage_guild=True, manage_messages=True))
     async def total(self, inter: disnake.ApplicationCommandInteraction) -> None:
         return await inter.response.pong()
 
@@ -380,7 +380,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
         await inter.edit_original_message(content=content)
         o.close()
 
-    @commands.slash_command(name="reset", description="서버 내의 스트라이크를 초기화합니다.", dm_permission=False)
+    @commands.slash_command(name="reset", description="서버 내의 스트라이크를 초기화합니다.", dm_permission=False, default_member_permissions=disnake.Permissions(manage_guild=True, manage_messages=True))
     async def _totalReset(self, inter: disnake.ApplicationCommandInteraction) -> None:
         admin = await self.check_admin(inter)
         if not admin:
@@ -407,7 +407,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
             await inter.delete_original_message()
             await inter.followup.send(content=f"> :wastebasket: **{inter.guild.name}** 서버의 모든 스트라이크 기록을 초기화했습니다.")
 
-    @commands.slash_command(name="settings", description="로이드 포저의 설정을 변경합니다.", dm_permission=False)
+    @commands.slash_command(name="settings", description="로이드 포저의 설정을 변경합니다.", dm_permission=False, default_member_permissions=disnake.Permissions(manage_guild=True, manage_messages=True))
     async def _settings(self, inter: disnake.ApplicationCommandInteraction) -> None:
         admin = await self.check_admin(inter)
         if not admin:
@@ -418,7 +418,7 @@ class Counter(commands.Cog, name="욕설 감지기"):
         await view.wait()
         await self.load_settings()
 
-    @commands.slash_command(name="strike", dm_permission=False)
+    @commands.slash_command(name="strike", dm_permission=False, default_member_permissions=disnake.Permissions(manage_guild=True, manage_messages=True))
     async def words(self, inter: disnake.ApplicationCommandInteraction) -> None:
         return await inter.response.pong()
 
